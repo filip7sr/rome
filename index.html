@@ -162,6 +162,12 @@
     font-family:'IBM Plex Mono', monospace;
     font-size:0.72rem;
     font-weight:600;
+    position:relative;
+    z-index:2;
+  }
+  .rail > .map-pin{
+    margin-top:4px;
+    flex:0 0 auto;
   }
   .leaflet-popup-content-wrapper{
     background:var(--paper);
@@ -190,22 +196,12 @@
   .stop .rail::before{
     content:'';
     position:absolute;
-    top:6px;
+    top:30px;
     bottom:-1.55rem;
     width:0;
     border-left:2px dotted var(--line);
   }
   .stop:last-child .rail::before{display:none;}
-  .stop .dot{
-    width:11px;
-    height:11px;
-    border-radius:50%;
-    background:var(--pompeian);
-    border:2px solid var(--paper);
-    box-shadow:0 0 0 1.5px var(--pompeian-deep);
-    margin-top:4px;
-    flex:0 0 auto;
-  }
   .stop time{
     font-family:'IBM Plex Mono', monospace;
     font-size:0.66rem;
@@ -256,6 +252,33 @@
   .maplink:active{background:var(--pine); color:var(--paper);}
   .maplink:focus-visible{outline:2px solid var(--pine); outline-offset:2px;}
 
+  .stop .rail .walk{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.6rem;
+    letter-spacing:0.02em;
+    color:var(--pine);
+    margin-top:10px;
+    text-align:center;
+    line-height:1.25;
+  }
+
+  /* ---------- Practical info ---------- */
+  .info-block{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:1rem 1.1rem;
+    margin-bottom:1rem;
+  }
+  .info-block h3{
+    font-family:'Fraunces', serif;
+    font-weight:560;
+    font-size:1rem;
+    margin:0 0 0.5rem;
+  }
+  .info-block p{margin:0 0 0.5rem; font-size:0.9rem; line-height:1.55; color:var(--ink-soft);}
+  .info-block p:last-child{margin-bottom:0.6rem;}
+
   footer{
     max-width:640px;
     margin:1.5rem auto 0;
@@ -281,7 +304,7 @@
 <nav class="day-tabs" id="dayTabs"></nav>
 <main id="dayContent"></main>
 
-<footer>Tap a pin on the map or a card to open it in Google Maps.</footer>
+<footer>Tap a pin or a card to open it in the Maps app.</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
@@ -317,11 +340,11 @@ const itinerary = [
       { time:"6:30 PM", title:"Aperitivo",
         blurb:"Spritz and stuzzichini at a wine bar near Navona — unchanged, a good place to decompress before dinner.",
         map:"Piazza Navona, Rome", lat:41.8991633, lng:12.4730742 },
-      { time:"8:30 PM", title:"Dinner near Campo de' Fiori",
-        blurb:"Classic Roman pastas. Try Roscioli if you can get a table — book ahead.",
-        map:"Roscioli, Rome", lat:41.894256, lng:12.4742417 },
-      { time:"10:30 PM", title:"Trevi Fountain by night",
-        blurb:"Dramatically lit and far less crowded after dark. Gelato nearby to finish the night.",
+      { time:"9:00 PM", title:"Dinner at Osteria La Quercia (booked)",
+        blurb:"Confirmed booking, a few steps off Campo de' Fiori. Does the Roman pasta trinity (cacio e pepe, carbonara, amatriciana) properly.",
+        map:"Osteria La Quercia, Rome", lat:41.8945897, lng:12.471692 },
+      { time:"11:15 PM", title:"Trevi Fountain by night",
+        blurb:"Dramatically lit and far less crowded after dark. With dinner now starting at 9, this gives you a relaxed two hours at the table first rather than rushing the last course. Gelato nearby to finish the night.",
         map:"Trevi Fountain, Rome", lat:41.9009325, lng:12.483313 }
     ]
   },
@@ -401,6 +424,12 @@ let currentMap = null;
 const tabsEl = document.getElementById('dayTabs');
 const contentEl = document.getElementById('dayContent');
 
+// Day tabs plus one extra view: a practical-info page
+const navItems = [
+  ...itinerary.map((d, i) => ({ type:'day', dayIndex:i, label:d.day, sub:d.date })),
+  { type:'info', label:'Info', sub:'guide' }
+];
+
 const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const IS_ANDROID = /Android/i.test(navigator.userAgent);
 
@@ -429,15 +458,79 @@ function mapLinkAttrs(q){
   return `href="${web}" target="_blank" rel="noopener"`;
 }
 
+// ---------- Walking time between two consecutive stops ----------
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const toRad = deg => deg * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function walkNote(a, b){
+  if(a.lat == null || a.lng == null || b.lat == null || b.lng == null) return '';
+  const km = haversineKm(a.lat, a.lng, b.lat, b.lng);
+  if(km > 3) return ''; // not a realistic walk (e.g. an airport transfer) — skip the badge
+  if(km < 0.15) return 'Just around the corner';
+  const routedKm = km * 1.3; // rough allowance for actual street routing vs a straight line
+  const minutes = Math.max(1, Math.round(routedKm / 4.8 * 60)); // ~4.8 km/h walking pace
+  return `≈${minutes} min walk`;
+}
+
+// ---------- Practical info ----------
+function renderInfo(){
+  contentEl.innerHTML = `
+    <div class="day-theme">
+      <h2>Practical info</h2>
+      <span>Good to know</span>
+    </div>
+
+    <div class="info-block">
+      <h3>Still to book</h3>
+      <p>Vatican access — general admission is sold out. Confirm a licensed guided-tour operator with its own allocation, or plan on Doria Pamphilj / San Luigi dei Francesi as the walk-in alternative.</p>
+      <p>St. Peter's timed entry — free reservation for the Friday 9:00 AM slot, book through the 2026 timed-entry system before you go.</p>
+      <p>Da Enzo al 29 — Friday 8:30 PM dinner in Trastevere, also needs advance booking.</p>
+    </div>
+
+    <div class="info-block">
+      <h3>Where you're staying</h3>
+      <p>Via Giacinto Carini 71, Monteverde — a block from the Gianicolo, an easy walk down into Trastevere.</p>
+      <a class="maplink" ${mapLinkAttrs('Via Giacinto Carini 71, Rome')}>${PIN} Open in Maps</a>
+    </div>
+
+    <div class="info-block">
+      <h3>Nearest pharmacy</h3>
+      <p>Farmacia Carini del Dr. Brienza, Via Giacinto Carini 44 — same street as the apartment. Mon–Fri 8:30am–1pm &amp; 4–7:30pm, Sat 8:30am–1pm, closed Sunday. +39 06 581 2381.</p>
+      <a class="maplink" ${mapLinkAttrs('Farmacia Carini del Dr. Brienza, Rome')}>${PIN} Open in Maps</a>
+    </div>
+
+    <div class="info-block">
+      <h3>Emergency numbers</h3>
+      <p><strong>112</strong> — the general emergency number, works anywhere in Italy and the EU, covers police, ambulance and fire.</p>
+    </div>
+
+    <div class="info-block">
+      <h3>Getting a taxi</h3>
+      <p>FreeNow and itTaxi are the two apps that actually work well in Rome — both call a real licensed taxi with upfront pricing. Regular Uber doesn't really exist here; the Uber app mostly just offers Uber Black, a pricier private-hire option.</p>
+    </div>
+
+    <div class="info-block">
+      <h3>WiFi</h3>
+      <p>Add the network name and password here once you've checked in.</p>
+    </div>
+  `;
+}
+
 function renderTabs(){
-  tabsEl.innerHTML = itinerary.map((d,i)=>
-    `<button class="tab${i===active?' active':''}" data-i="${i}">${d.day}<span class="d">${d.date}</span></button>`
+  tabsEl.innerHTML = navItems.map((item,i)=>
+    `<button class="tab${i===active?' active':''}" data-i="${i}">${item.label}<span class="d">${item.sub}</span></button>`
   ).join('');
   tabsEl.querySelectorAll('.tab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       active = parseInt(btn.dataset.i, 10);
       renderTabs();
-      renderDay();
+      renderActive();
       window.scrollTo({top:0, behavior:'smooth'});
     });
   });
@@ -483,13 +576,16 @@ function renderMap(stops){
   currentMap = map;
 }
 
-function renderDay(){
-  const d = itinerary[active];
-  const stopsHtml = d.stops.map(s => `
+function renderDayView(d){
+  const stopsHtml = d.stops.map((s, i) => {
+    const next = d.stops[i+1];
+    const walk = next ? walkNote(s, next) : '';
+    return `
     <div class="stop">
       <div class="rail">
-        <div class="dot"></div>
+        <div class="map-pin">${i+1}</div>
         <time>${s.time.replace(' ', '<br>')}</time>
+        ${walk ? `<span class="walk">${walk}</span>` : ''}
       </div>
       <div class="card">
         <h3>${s.title}</h3>
@@ -497,7 +593,8 @@ function renderDay(){
         <a class="maplink" ${mapLinkAttrs(s.map)}>${PIN} Open in Maps</a>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   contentEl.innerHTML = `
     <div class="day-theme">
@@ -511,8 +608,23 @@ function renderDay(){
   renderMap(d.stops);
 }
 
+function renderActive(){
+  const item = navItems[active];
+
+  if(item.type === 'day'){
+    renderDayView(itinerary[item.dayIndex]);
+    return;
+  }
+
+  if(currentMap){ currentMap.remove(); currentMap = null; }
+
+  if(item.type === 'info'){
+    renderInfo();
+  }
+}
+
 renderTabs();
-renderDay();
+renderActive();
 </script>
 
 </body>
