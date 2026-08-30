@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,650&family=IBM+Plex+Mono:wght@500;600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
   :root{
     --stone:#e9e3d6;
@@ -120,7 +121,7 @@
     align-items:baseline;
     justify-content:space-between;
     gap:0.75rem;
-    margin:0 0 1.3rem;
+    margin:0 0 1.1rem;
     padding-bottom:0.7rem;
     border-bottom:2px solid var(--ink);
   }
@@ -137,6 +138,41 @@
     color:var(--bronze);
     white-space:nowrap;
   }
+
+  /* ---------- Map ---------- */
+  #dayMap{
+    height:230px;
+    border-radius:var(--radius);
+    margin-bottom:1.4rem;
+    border:1px solid var(--line);
+    overflow:hidden;
+    background:var(--paper);
+  }
+  .map-pin{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:var(--pompeian);
+    color:var(--paper);
+    border:2px solid var(--paper);
+    box-shadow:0 0 0 1.5px var(--pompeian-deep);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    font-weight:600;
+  }
+  .leaflet-popup-content-wrapper{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:10px;
+    font-family:'Source Sans 3', system-ui, sans-serif;
+  }
+  .leaflet-popup-content{margin:0.6rem 0.75rem; font-size:0.85rem; line-height:1.4;}
+  .leaflet-popup-content strong{font-family:'Fraunces', serif; font-size:0.95rem;}
+  .leaflet-popup-tip{background:var(--paper);}
+  .leaflet-control-attribution{font-size:0.6rem;}
 
   /* ---------- Timeline ---------- */
   .stop{
@@ -245,8 +281,9 @@
 <nav class="day-tabs" id="dayTabs"></nav>
 <main id="dayContent"></main>
 
-<footer>Tap a pin to open the location in Google Maps.</footer>
+<footer>Tap a pin on the map or a card to open it in Google Maps.</footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-7.58 7-13A7 7 0 0 0 5 9c0 5.42 7 13 7 13Z"/><circle cx="12" cy="9" r="2.3"/></svg>';
 
@@ -256,10 +293,10 @@ const itinerary = [
     stops: [
       { time:"11:05 PM", title:"Land at FCO",
         blurb:"Passport control and bags, then a taxi to Monteverde — about 45 minutes, flat rate near €50. Trains have mostly stopped running this late, so a taxi is the move tonight.",
-        map:"Leonardo da Vinci–Fiumicino Airport" },
+        map:"Leonardo da Vinci–Fiumicino Airport", lat:41.8034632, lng:12.2519211 },
       { time:"12:30 AM", title:"Check in &amp; unwind",
         blurb:"You're a block from the Gianicolo, an easy walk down into Trastevere if either of you wants a late bite or a nightcap before bed.",
-        map:"Via Giacinto Carini 71, Rome" }
+        map:"Via Giacinto Carini 71, Rome", lat:41.8829334, lng:12.4610519 }
     ]
   },
   {
@@ -267,25 +304,25 @@ const itinerary = [
     stops: [
       { time:"10:45 AM", title:"Colosseum Full Experience (booked)",
         blurb:"Arena floor, Roman Forum and Palatine Hill on your ticket. With the later start, keep a slightly brisker pace than a fully leisurely loop — aim for 3 to 3.5 hours rather than 4. Bring water and a hat, there's almost no shade.",
-        map:"Colosseum, Rome" },
+        map:"Colosseum, Rome", lat:41.8902102, lng:12.4922309 },
       { time:"2:00 PM", title:"Late lunch in Monti",
         blurb:"Rome's oldest rione, a ten-minute walk from the Forum exit. Order fairly promptly — some kitchens wind down around 2:30-3pm. A wine bar or pizza al taglio spot is a good backup if you're running later.",
-        map:"Rione Monti, Rome" },
+        map:"Rione Monti, Rome", lat:41.8947077, lng:12.4925226 },
       { time:"3:30 PM", title:"Pantheon",
         blurb:"A 2,000-year-old dome that's still the largest unreinforced concrete dome ever built. Free entry — a quick 20-30 minute stop today.",
-        map:"Pantheon, Rome" },
+        map:"Pantheon, Rome", lat:41.8986108, lng:12.4768729 },
       { time:"4:15 PM", title:"Piazza Navona &amp; Baroque Rome",
         blurb:"Bernini's Fountain of the Four Rivers and the tight, theatrical streets of the centro storico. A shorter wander than originally planned, but still plenty to take in before aperitivo.",
-        map:"Piazza Navona, Rome" },
+        map:"Piazza Navona, Rome", lat:41.8991633, lng:12.4730742 },
       { time:"6:30 PM", title:"Aperitivo",
         blurb:"Spritz and stuzzichini at a wine bar near Navona — unchanged, a good place to decompress before dinner.",
-        map:"Piazza Navona, Rome" },
+        map:"Piazza Navona, Rome", lat:41.8991633, lng:12.4730742 },
       { time:"8:30 PM", title:"Dinner near Campo de' Fiori",
         blurb:"Classic Roman pastas. Try Roscioli if you can get a table — book ahead.",
-        map:"Roscioli, Rome" },
+        map:"Roscioli, Rome", lat:41.894256, lng:12.4742417 },
       { time:"10:30 PM", title:"Trevi Fountain by night",
         blurb:"Dramatically lit and far less crowded after dark. Gelato nearby to finish the night.",
-        map:"Trevi Fountain, Rome" }
+        map:"Trevi Fountain, Rome", lat:41.9009325, lng:12.483313 }
     ]
   },
   {
@@ -293,28 +330,28 @@ const itinerary = [
     stops: [
       { time:"9:00 AM", title:"St. Peter's Basilica",
         blurb:"A later slot means a bit more of a line inside, but the free reservation still gets you past the worst of the security queue outside. Add the dome climb if legs — and heads — are up for 320 steps.",
-        map:"St. Peter's Basilica, Vatican City" },
+        map:"St. Peter's Basilica, Vatican City", lat:41.9021667, lng:12.4539367 },
       { time:"10:30 AM", title:"Castel Sant'Angelo",
         blurb:"Hadrian's mausoleum turned papal fortress — 1,900 years of history in one building, a short walk from St. Peter's.",
-        map:"Castel Sant'Angelo, Rome" },
+        map:"Castel Sant'Angelo, Rome", lat:41.9030632, lng:12.466276 },
       { time:"12:00 PM", title:"Lunch near Piazza Navona",
         blurb:"A central spot to refuel — good moment for something solid if last night's drinks need soaking up.",
-        map:"Piazza Navona, Rome" },
+        map:"Piazza Navona, Rome", lat:41.8991633, lng:12.4730742 },
       { time:"1:30 PM", title:"Doria Pamphilj Gallery",
         blurb:"No booking ever needed. A still-lived-in family palace with a Velázquez portrait and two Caravaggios — a strong stand-in for the sold-out Vatican Museums.",
-        map:"Galleria Doria Pamphilj, Rome" },
+        map:"Galleria Doria Pamphilj, Rome", lat:41.8979782, lng:12.4815742 },
       { time:"3:30 PM", title:"Free time back at the apartment",
         blurb:"Built-in downtime given the late night before. Nap, shower, or just sit somewhere shaded — no shame in a slow patch.",
-        map:"Via Giacinto Carini 71, Rome" },
+        map:"Via Giacinto Carini 71, Rome", lat:41.8829334, lng:12.4610519 },
       { time:"7:00 PM", title:"Golden hour on the Gianicolo",
         blurb:"Sunset is around 7:45pm in early September. Genuinely the best skyline view in Rome, and it's basically your backyard.",
-        map:"Piazzale Giuseppe Garibaldi, Rome" },
+        map:"Piazzale Giuseppe Garibaldi, Rome", lat:41.8913049, lng:12.460789 },
       { time:"8:30 PM", title:"Trastevere dinner",
         blurb:"Cobblestone alleys, ivy-draped trattorias. Da Enzo al 29 is excellent but needs a reservation.",
-        map:"Da Enzo al 29, Rome" },
+        map:"Da Enzo al 29, Rome", lat:41.8880847, lng:12.4778554 },
       { time:"10:30 PM", title:"Drinks in Trastevere",
         blurb:"Freni e Frizioni for cocktails, or Bar San Calisto for a cheap, unpretentious nightcap.",
-        map:"Freni e Frizioni, Rome" }
+        map:"Freni e Frizioni, Rome", lat:41.8913492, lng:12.4707561 }
     ]
   },
   {
@@ -322,28 +359,28 @@ const itinerary = [
     stops: [
       { time:"9:30 AM", title:"Palazzo Barberini",
         blurb:"Bernini and Borromini both designed staircases here — literally rival architects, same building. Raphael's La Fornarina and a Caravaggio inside. Rarely sells out, unlike Borghese.",
-        map:"Palazzo Barberini, Rome" },
+        map:"Palazzo Barberini, Rome", lat:41.903358, lng:12.489826 },
       { time:"11:30 AM", title:"Villa Borghese gardens",
         blurb:"The park itself is free and open even without a gallery ticket — shaded paths, a small lake, an Ionic temple.",
-        map:"Villa Borghese, Rome" },
+        map:"Villa Borghese, Rome", lat:41.9138782, lng:12.4853818 },
       { time:"12:30 PM", title:"Piazza del Popolo &amp; Santa Maria del Popolo",
         blurb:"Walk in free — the Cerasi Chapel has two more Caravaggios: The Conversion of Saint Paul and The Crucifixion of Saint Peter.",
-        map:"Santa Maria del Popolo, Rome" },
+        map:"Santa Maria del Popolo, Rome", lat:41.9114632, lng:12.4762433 },
       { time:"1:30 PM", title:"Lunch near via Margutta",
         blurb:"The old artists' street, a quieter pocket just off the shopping streets.",
-        map:"Via Margutta, Rome" },
+        map:"Via Margutta, Rome", lat:41.9085893, lng:12.4795757 },
       { time:"3:30 PM", title:"Jewish Ghetto &amp; Largo di Torre Argentina",
         blurb:"Rome's oldest Jewish quarter, 2,000-year-old temple ruins, and a cat sanctuary in the excavated square.",
-        map:"Largo di Torre Argentina, Rome" },
+        map:"Largo di Torre Argentina, Rome", lat:41.8960403, lng:12.4768916 },
       { time:"5:00 PM", title:"Campo de' Fiori",
         blurb:"Market square by day, buzzing bar scene by early evening.",
-        map:"Campo de' Fiori, Rome" },
+        map:"Campo de' Fiori, Rome", lat:41.8954097, lng:12.472202 },
       { time:"8:00 PM", title:"Farewell dinner in the Ghetto",
         blurb:"Carciofi alla giudia — Roman-Jewish fried artichokes — at Giggetto or Nonna Betta.",
-        map:"Giggetto al Portico d'Ottavia, Rome" },
+        map:"Giggetto al Portico d'Ottavia, Rome", lat:41.8927321, lng:12.4783831 },
       { time:"10:00 PM", title:"Last cocktails",
         blurb:"A proper cocktail bar to close out the trip — Drink Kong or The Court fit better than a tourist spot for a last night out.",
-        map:"Drink Kong, Rome" }
+        map:"Drink Kong, Rome", lat:41.8951585, lng:12.497966 }
     ]
   },
   {
@@ -351,20 +388,21 @@ const itinerary = [
     stops: [
       { time:"8:00 AM", title:"Coffee &amp; cornetto",
         blurb:"One last espresso standing at the bar near your place.",
-        map:"Via Giacinto Carini 71, Rome" },
+        map:"Via Giacinto Carini 71, Rome", lat:41.8829334, lng:12.4610519 },
       { time:"9:00 AM", title:"Head to FCO",
         blurb:"The FL1 regional train runs direct from Roma Trastevere station — a ten-minute walk from Via Giacinto Carini — to Fiumicino Airport in about 30 minutes. Cheaper and easier than a taxi at this hour.",
-        map:"Roma Trastevere railway station, Rome" }
+        map:"Roma Trastevere railway station, Rome", lat:41.8725904, lng:12.4660855 }
     ]
   }
 ];
 
 let active = 0;
+let currentMap = null;
 const tabsEl = document.getElementById('dayTabs');
 const contentEl = document.getElementById('dayContent');
 
 function mapUrl(q){
-  return 'https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(q);
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
 }
 
 function renderTabs(){
@@ -379,6 +417,46 @@ function renderTabs(){
       window.scrollTo({top:0, behavior:'smooth'});
     });
   });
+}
+
+function renderMap(stops){
+  const mapEl = document.getElementById('dayMap');
+  if(!mapEl || typeof L === 'undefined') return;
+
+  if(currentMap){ currentMap.remove(); currentMap = null; }
+
+  const map = L.map(mapEl, { attributionControl:false, scrollWheelZoom:false });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom:19,
+    subdomains:'abcd'
+  }).addTo(map);
+  L.control.attribution({ position:'bottomright' }).addAttribution('&copy; OpenStreetMap &copy; CARTO').addTo(map);
+
+  const latlngs = [];
+  stops.forEach((s, i) => {
+    if(s.lat == null || s.lng == null) return;
+    const ll = [s.lat, s.lng];
+    latlngs.push(ll);
+    const icon = L.divIcon({
+      className:'',
+      html:`<div class="map-pin">${i+1}</div>`,
+      iconSize:[26,26],
+      iconAnchor:[13,13],
+      popupAnchor:[0,-14]
+    });
+    L.marker(ll, { icon }).addTo(map)
+      .bindPopup(`<strong>${s.title}</strong><br>${s.time}`);
+  });
+
+  if(latlngs.length > 1){
+    L.polyline(latlngs, { color:'#4a5a44', weight:2.5, dashArray:'6,8', opacity:0.85 }).addTo(map);
+  }
+  if(latlngs.length){
+    map.fitBounds(latlngs, { padding:[30,30], maxZoom:16 });
+  } else {
+    map.setView([41.9, 12.48], 13);
+  }
+  currentMap = map;
 }
 
 function renderDay(){
@@ -402,8 +480,11 @@ function renderDay(){
       <h2>${d.theme}</h2>
       <span>${d.day} · ${d.date}</span>
     </div>
+    <div id="dayMap"></div>
     ${stopsHtml}
   `;
+
+  renderMap(d.stops);
 }
 
 renderTabs();
