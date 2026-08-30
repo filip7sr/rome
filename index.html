@@ -401,8 +401,32 @@ let currentMap = null;
 const tabsEl = document.getElementById('dayTabs');
 const contentEl = document.getElementById('dayContent');
 
-function mapUrl(q){
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+
+function webMapsUrl(q){
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+}
+
+// Builds the href + any extra attributes for the "Open in Maps" link,
+// preferring a direct hand-off to the native Google Maps app.
+function mapLinkAttrs(q){
+  const query = encodeURIComponent(q);
+  const web = webMapsUrl(q);
+
+  if(IS_IOS){
+    // comgooglemaps:// is Google Maps' own iOS URL scheme — opens the app directly.
+    // If the app isn't installed, nothing happens on tap, so fall back to the
+    // web version after a short delay if the page never lost focus.
+    return `href="comgooglemaps://?q=${query}" onclick="setTimeout(function(){ if(!document.hidden){ window.location.href='${web}'; } }, 1200);"`;
+  }
+  if(IS_ANDROID){
+    // geo: is the standard Android intent for map queries — the OS routes it
+    // to Google Maps (or whichever maps app is set as default) directly.
+    return `href="geo:0,0?q=${query}"`;
+  }
+  // Desktop / anything else: no native app to hand off to, use the web version.
+  return `href="${web}" target="_blank" rel="noopener"`;
 }
 
 function renderTabs(){
@@ -470,7 +494,7 @@ function renderDay(){
       <div class="card">
         <h3>${s.title}</h3>
         <p>${s.blurb}</p>
-        <a class="maplink" href="${mapUrl(s.map)}" target="_blank" rel="noopener">${PIN} Open in Maps</a>
+        <a class="maplink" ${mapLinkAttrs(s.map)}>${PIN} Open in Maps</a>
       </div>
     </div>
   `).join('');
