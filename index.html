@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rome · Sept 2–6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,650&family=IBM+Plex+Mono:wght@500;600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone:#e9e3d6;
+    --paper:#faf7f0;
+    --ink:#2a231d;
+    --ink-soft:#5b5147;
+    --pompeian:#a5402c;
+    --pompeian-deep:#7c2f21;
+    --bronze:#8c7a4f;
+    --pine:#4a5a44;
+    --line:#d8cfba;
+    --radius:14px;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+
+  body{
+    margin:0;
+    background:var(--stone);
+    color:var(--ink);
+    font-family:'Source Sans 3', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:3rem;
+  }
+
+  a{color:inherit;}
+
+  /* ---------- Header ---------- */
+  header{
+    padding:2.2rem 1.25rem 1.6rem;
+    text-align:center;
+    background:
+      radial-gradient(120% 140% at 50% -20%, rgba(165,64,44,0.10), transparent 60%),
+      var(--stone);
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--pompeian-deep);
+    margin:0 0 0.6rem;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:650;
+    font-size:clamp(2.2rem, 9vw, 2.8rem);
+    letter-spacing:0.01em;
+    margin:0 0 0.35rem;
+  }
+  header p.sub{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:0.92rem;
+  }
+
+  /* ---------- Day tabs (targa / street-plaque style) ---------- */
+  nav.day-tabs{
+    position:sticky;
+    top:0;
+    z-index:20;
+    display:flex;
+    gap:0.5rem;
+    overflow-x:auto;
+    padding:0.85rem 1rem;
+    background:var(--stone);
+    border-bottom:1px solid var(--line);
+    scrollbar-width:none;
+  }
+  nav.day-tabs::-webkit-scrollbar{display:none;}
+
+  .tab{
+    flex:0 0 auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:0.55rem 0.8rem 0.5rem;
+    background:var(--paper);
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    border-radius:10px 10px 5px 5px;
+    cursor:pointer;
+    text-align:center;
+    line-height:1.25;
+    min-width:64px;
+    transition:transform .15s ease;
+  }
+  .tab .d{display:block; font-size:0.78rem; font-weight:600; color:var(--ink);}
+  .tab.active{
+    background:var(--pompeian);
+    border-color:var(--pompeian-deep);
+    color:var(--paper);
+    box-shadow:inset 0 2px 5px rgba(0,0,0,0.35);
+    transform:translateY(1px);
+  }
+  .tab.active .d{color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--pine); outline-offset:2px;}
+
+  /* ---------- Day content ---------- */
+  main{
+    max-width:640px;
+    margin:0 auto;
+    padding:1.4rem 1.1rem 0.5rem;
+  }
+
+  .day-theme{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:0.75rem;
+    margin:0 0 1.3rem;
+    padding-bottom:0.7rem;
+    border-bottom:2px solid var(--ink);
+  }
+  .day-theme h2{
+    font-family:'Fraunces', serif;
+    font-weight:650;
+    font-size:1.5rem;
+    margin:0;
+  }
+  .day-theme span{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    letter-spacing:0.05em;
+    color:var(--bronze);
+    white-space:nowrap;
+  }
+
+  /* ---------- Timeline ---------- */
+  .stop{
+    display:grid;
+    grid-template-columns:64px 1fr;
+    column-gap:0.85rem;
+    position:relative;
+  }
+  .stop .rail{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .stop .rail::before{
+    content:'';
+    position:absolute;
+    top:6px;
+    bottom:-1.55rem;
+    width:0;
+    border-left:2px dotted var(--line);
+  }
+  .stop:last-child .rail::before{display:none;}
+  .stop .dot{
+    width:11px;
+    height:11px;
+    border-radius:50%;
+    background:var(--pompeian);
+    border:2px solid var(--paper);
+    box-shadow:0 0 0 1.5px var(--pompeian-deep);
+    margin-top:4px;
+    flex:0 0 auto;
+  }
+  .stop time{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.66rem;
+    letter-spacing:0.03em;
+    color:var(--ink-soft);
+    margin-top:8px;
+    text-align:center;
+    line-height:1.2;
+  }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:0.95rem 1rem 1rem;
+    margin-bottom:1.55rem;
+  }
+  .card h3{
+    font-family:'Fraunces', serif;
+    font-weight:560;
+    font-size:1.08rem;
+    margin:0 0 0.4rem;
+    line-height:1.3;
+  }
+  .card p{
+    margin:0 0 0.75rem;
+    font-size:0.92rem;
+    line-height:1.5;
+    color:var(--ink-soft);
+  }
+
+  .maplink{
+    display:inline-flex;
+    align-items:center;
+    gap:0.35rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    text-decoration:none;
+    color:var(--pine);
+    border:1px solid var(--pine);
+    border-radius:999px;
+    padding:0.4rem 0.7rem;
+    min-height:32px;
+  }
+  .maplink svg{width:12px; height:12px; flex:0 0 auto;}
+  .maplink:active{background:var(--pine); color:var(--paper);}
+  .maplink:focus-visible{outline:2px solid var(--pine); outline-offset:2px;}
+
+  footer{
+    max-width:640px;
+    margin:1.5rem auto 0;
+    padding:0 1.25rem;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .tab{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Wed 2 — Sun 6 September 2026</p>
+  <h1>Roma</h1>
+  <p class="sub">Architecture, history, food &amp; drink · Via Giacinto Carini, Monteverde</p>
+</header>
+
+<nav class="day-tabs" id="dayTabs"></nav>
+<main id="dayContent"></main>
+
+<footer>Tap a pin to open the location in Google Maps.</footer>
+
+<script>
+const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-7.58 7-13A7 7 0 0 0 5 9c0 5.42 7 13 7 13Z"/><circle cx="12" cy="9" r="2.3"/></svg>';
+
+const itinerary = [
+  {
+    day: "Wed", date: "Sep 2", theme: "Arrival",
+    stops: [
+      { time:"11:05 PM", title:"Land at FCO",
+        blurb:"Passport control and bags, then a taxi to Monteverde — about 45 minutes, flat rate near €50. Trains have mostly stopped running this late, so a taxi is the move tonight.",
+        map:"Leonardo da Vinci–Fiumicino Airport" },
+      { time:"12:30 AM", title:"Check in &amp; unwind",
+        blurb:"You're a block from the Gianicolo, an easy walk down into Trastevere if either of you wants a late bite or a nightcap before bed.",
+        map:"Via Giacinto Carini 71, Rome" }
+    ]
+  },
+  {
+    day: "Thu", date: "Sep 3", theme: "Ancient Rome",
+    stops: [
+      { time:"10:45 AM", title:"Colosseum Full Experience (booked)",
+        blurb:"Arena floor, Roman Forum and Palatine Hill on your ticket. With the later start, keep a slightly brisker pace than a fully leisurely loop — aim for 3 to 3.5 hours rather than 4. Bring water and a hat, there's almost no shade.",
+        map:"Colosseum, Rome" },
+      { time:"2:00 PM", title:"Late lunch in Monti",
+        blurb:"Rome's oldest rione, a ten-minute walk from the Forum exit. Order fairly promptly — some kitchens wind down around 2:30-3pm. A wine bar or pizza al taglio spot is a good backup if you're running later.",
+        map:"Rione Monti, Rome" },
+      { time:"3:30 PM", title:"Pantheon",
+        blurb:"A 2,000-year-old dome that's still the largest unreinforced concrete dome ever built. Free entry — a quick 20-30 minute stop today.",
+        map:"Pantheon, Rome" },
+      { time:"4:15 PM", title:"Piazza Navona &amp; Baroque Rome",
+        blurb:"Bernini's Fountain of the Four Rivers and the tight, theatrical streets of the centro storico. A shorter wander than originally planned, but still plenty to take in before aperitivo.",
+        map:"Piazza Navona, Rome" },
+      { time:"6:30 PM", title:"Aperitivo",
+        blurb:"Spritz and stuzzichini at a wine bar near Navona — unchanged, a good place to decompress before dinner.",
+        map:"Piazza Navona, Rome" },
+      { time:"8:30 PM", title:"Dinner near Campo de' Fiori",
+        blurb:"Classic Roman pastas. Try Roscioli if you can get a table — book ahead.",
+        map:"Roscioli, Rome" },
+      { time:"10:30 PM", title:"Trevi Fountain by night",
+        blurb:"Dramatically lit and far less crowded after dark. Gelato nearby to finish the night.",
+        map:"Trevi Fountain, Rome" }
+    ]
+  },
+  {
+    day: "Fri", date: "Sep 4", theme: "The Vatican &amp; the river",
+    stops: [
+      { time:"9:00 AM", title:"St. Peter's Basilica",
+        blurb:"A later slot means a bit more of a line inside, but the free reservation still gets you past the worst of the security queue outside. Add the dome climb if legs — and heads — are up for 320 steps.",
+        map:"St. Peter's Basilica, Vatican City" },
+      { time:"10:30 AM", title:"Castel Sant'Angelo",
+        blurb:"Hadrian's mausoleum turned papal fortress — 1,900 years of history in one building, a short walk from St. Peter's.",
+        map:"Castel Sant'Angelo, Rome" },
+      { time:"12:00 PM", title:"Lunch near Piazza Navona",
+        blurb:"A central spot to refuel — good moment for something solid if last night's drinks need soaking up.",
+        map:"Piazza Navona, Rome" },
+      { time:"1:30 PM", title:"Doria Pamphilj Gallery",
+        blurb:"No booking ever needed. A still-lived-in family palace with a Velázquez portrait and two Caravaggios — a strong stand-in for the sold-out Vatican Museums.",
+        map:"Galleria Doria Pamphilj, Rome" },
+      { time:"3:30 PM", title:"Free time back at the apartment",
+        blurb:"Built-in downtime given the late night before. Nap, shower, or just sit somewhere shaded — no shame in a slow patch.",
+        map:"Via Giacinto Carini 71, Rome" },
+      { time:"7:00 PM", title:"Golden hour on the Gianicolo",
+        blurb:"Sunset is around 7:45pm in early September. Genuinely the best skyline view in Rome, and it's basically your backyard.",
+        map:"Piazzale Giuseppe Garibaldi, Rome" },
+      { time:"8:30 PM", title:"Trastevere dinner",
+        blurb:"Cobblestone alleys, ivy-draped trattorias. Da Enzo al 29 is excellent but needs a reservation.",
+        map:"Da Enzo al 29, Rome" },
+      { time:"10:30 PM", title:"Drinks in Trastevere",
+        blurb:"Freni e Frizioni for cocktails, or Bar San Calisto for a cheap, unpretentious nightcap.",
+        map:"Freni e Frizioni, Rome" }
+    ]
+  },
+  {
+    day: "Sat", date: "Sep 5", theme: "Baroque Rome",
+    stops: [
+      { time:"9:30 AM", title:"Palazzo Barberini",
+        blurb:"Bernini and Borromini both designed staircases here — literally rival architects, same building. Raphael's La Fornarina and a Caravaggio inside. Rarely sells out, unlike Borghese.",
+        map:"Palazzo Barberini, Rome" },
+      { time:"11:30 AM", title:"Villa Borghese gardens",
+        blurb:"The park itself is free and open even without a gallery ticket — shaded paths, a small lake, an Ionic temple.",
+        map:"Villa Borghese, Rome" },
+      { time:"12:30 PM", title:"Piazza del Popolo &amp; Santa Maria del Popolo",
+        blurb:"Walk in free — the Cerasi Chapel has two more Caravaggios: The Conversion of Saint Paul and The Crucifixion of Saint Peter.",
+        map:"Santa Maria del Popolo, Rome" },
+      { time:"1:30 PM", title:"Lunch near via Margutta",
+        blurb:"The old artists' street, a quieter pocket just off the shopping streets.",
+        map:"Via Margutta, Rome" },
+      { time:"3:30 PM", title:"Jewish Ghetto &amp; Largo di Torre Argentina",
+        blurb:"Rome's oldest Jewish quarter, 2,000-year-old temple ruins, and a cat sanctuary in the excavated square.",
+        map:"Largo di Torre Argentina, Rome" },
+      { time:"5:00 PM", title:"Campo de' Fiori",
+        blurb:"Market square by day, buzzing bar scene by early evening.",
+        map:"Campo de' Fiori, Rome" },
+      { time:"8:00 PM", title:"Farewell dinner in the Ghetto",
+        blurb:"Carciofi alla giudia — Roman-Jewish fried artichokes — at Giggetto or Nonna Betta.",
+        map:"Giggetto al Portico d'Ottavia, Rome" },
+      { time:"10:00 PM", title:"Last cocktails",
+        blurb:"A proper cocktail bar to close out the trip — Drink Kong or The Court fit better than a tourist spot for a last night out.",
+        map:"Drink Kong, Rome" }
+    ]
+  },
+  {
+    day: "Sun", date: "Sep 6", theme: "Departure",
+    stops: [
+      { time:"8:00 AM", title:"Coffee &amp; cornetto",
+        blurb:"One last espresso standing at the bar near your place.",
+        map:"Via Giacinto Carini 71, Rome" },
+      { time:"9:00 AM", title:"Head to FCO",
+        blurb:"The FL1 regional train runs direct from Roma Trastevere station — a ten-minute walk from Via Giacinto Carini — to Fiumicino Airport in about 30 minutes. Cheaper and easier than a taxi at this hour.",
+        map:"Roma Trastevere railway station, Rome" }
+    ]
+  }
+];
+
+let active = 0;
+const tabsEl = document.getElementById('dayTabs');
+const contentEl = document.getElementById('dayContent');
+
+function mapUrl(q){
+  return 'https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(q);
+}
+
+function renderTabs(){
+  tabsEl.innerHTML = itinerary.map((d,i)=>
+    `<button class="tab${i===active?' active':''}" data-i="${i}">${d.day}<span class="d">${d.date}</span></button>`
+  ).join('');
+  tabsEl.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      active = parseInt(btn.dataset.i, 10);
+      renderTabs();
+      renderDay();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+}
+
+function renderDay(){
+  const d = itinerary[active];
+  const stopsHtml = d.stops.map(s => `
+    <div class="stop">
+      <div class="rail">
+        <div class="dot"></div>
+        <time>${s.time.replace(' ', '<br>')}</time>
+      </div>
+      <div class="card">
+        <h3>${s.title}</h3>
+        <p>${s.blurb}</p>
+        <a class="maplink" href="${mapUrl(s.map)}" target="_blank" rel="noopener">${PIN} Open in Maps</a>
+      </div>
+    </div>
+  `).join('');
+
+  contentEl.innerHTML = `
+    <div class="day-theme">
+      <h2>${d.theme}</h2>
+      <span>${d.day} · ${d.date}</span>
+    </div>
+    ${stopsHtml}
+  `;
+}
+
+renderTabs();
+renderDay();
+</script>
+
+</body>
+</html>
